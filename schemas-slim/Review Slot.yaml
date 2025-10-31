@@ -48,7 +48,7 @@ properties:
       id: 104ltq3la9umf
     description: The changes that are being made to the design for this review.
   requestedBy:
-    $ref: 'stoplight://resources/overrides/JMQvznLc4GE'
+    $ref: 'stoplight://resources/overrides/35TQfhBEfxU'
     x-stoplight:
       id: 4nggp5en6u8yu
     description: The API Designer that requested the review
@@ -58,7 +58,7 @@ properties:
       id: 6o6naf4qfc92x
     description: The development request which this review is for
   version:
-    $ref: 'stoplight://resources/overrides/kYI2PrWfF4M'
+    $ref: 'stoplight://resources/overrides/jpUgyw1MbS4'
     x-stoplight:
       id: zbr7hsk6mu648
     description: The version of the API Design this review is for
