@@ -1,0 +1,31 @@
+type: object
+x-stoplight:
+  id: r3xfk87tlh0qd
+title: Parameter Review
+description: The results of reviewing a parameter for a path or method in an API design document.
+properties:
+  id:
+    $ref: ../models/Id.yaml
+    x-stoplight:
+      id: lj4emf4r9512m
+  parameterName:
+    type: string
+    description: The name of the parameter this review is for
+    x-stoplight:
+      id: jt8lc2u8bv0h8
+  properName:
+    $ref: ../models/Check.yaml
+    x-stoplight:
+      id: pce5p38g57v65
+  description:
+    $ref: ../models/Check.yaml
+    x-stoplight:
+      id: i1btptmnps55o
+  createdAt:
+    $ref: ../models/CreatedAt.yaml
+    x-stoplight:
+      id: svsszfw8yenkl
+  updatedAt:
+    $ref: ../models/UpdatedAt.yaml
+    x-stoplight:
+      id: 5o28p0i7s21uo

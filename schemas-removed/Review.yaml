@@ -1,0 +1,42 @@
+type: object
+x-stoplight:
+  id: 0r8b5p2uu7htv
+title: Review
+description: 'All the information related to a review. Only values that exist will be what is either currently needing to be address, or already been approved. If there are aspects of a design that do not appear to have a record of that entity being reviewed, then it''s expected that it was good from the start.'
+required:
+  - id
+  - paths
+  - models
+  - createdAt
+  - updatedAt
+properties:
+  id:
+    $ref: ../models/Id.yaml
+    x-stoplight:
+      id: eyh2ew3vgd0jv
+  paths:
+    type: array
+    description: Paths that have been reviewed as part of this version's review
+    items:
+      $ref: ./Path Review.yaml
+      x-stoplight:
+        id: 0n7leztv6ire9
+    x-stoplight:
+      id: 979uqpkq5wz9l
+  models:
+    type: array
+    description: Models that have been reviewed as part of this Review
+    items:
+      $ref: ./Model Review.yaml
+      x-stoplight:
+        id: u5axc2kipzz9d
+    x-stoplight:
+      id: secjdxey4xkr3
+  createdAt:
+    $ref: ../models/CreatedAt.yaml
+    x-stoplight:
+      id: ti4uylke9hilq
+  updatedAt:
+    $ref: ../models/UpdatedAt.yaml
+    x-stoplight:
+      id: lv8vho230o1so

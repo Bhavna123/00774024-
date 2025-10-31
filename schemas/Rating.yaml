@@ -1,0 +1,55 @@
+type: object
+x-stoplight:
+  id: 00k2mmig1n7pn
+description: |-
+  User rating for an API based on their resonse to these statements.
+  They may rate it Very Satisfied to Very Dissatisfied (5 selectable values).
+
+  - I found the documentation and examples easy to understand
+  - I experienced few errors and quick responses for all operations
+  - Requests for help or changes were answered quickly
+required:
+  - versionRated
+  - documentationRating
+  - responsivenessRating
+  - supportRating
+  - createdAt
+  - updatedAt
+  - rater
+properties:
+  versionRated:
+    type: string
+    x-stoplight:
+      id: lpcqxfapvp1d1
+    example: '3.2'
+    description: Latest version minorNumber at the time the rating was posted
+  documentationRating:
+    type: integer
+    x-stoplight:
+      id: 0me6yodg8klde
+    description: Rating for the document
+  responsivenessRating:
+    type: integer
+    x-stoplight:
+      id: js7aihvo4fmuk
+    description: Rating for API responsiveness and error handling
+  supportRating:
+    type: integer
+    x-stoplight:
+      id: t8m4ixspesjfz
+    description: Rating for help provided from API support
+  createdAt:
+    $ref: ../models/CreatedAt.yaml
+    description: The time this record was created
+    x-stoplight:
+      id: rrndc21eayarm
+  updatedAt:
+    $ref: ../models/UpdatedAt.yaml
+    description: The time this record was last updated
+    x-stoplight:
+      id: hh31pgqg9qzo8
+  rater:
+    $ref: ./Stakeholder.yaml
+    x-stoplight:
+      id: 8jzol89e6glbx
+    description: Person who rated the API

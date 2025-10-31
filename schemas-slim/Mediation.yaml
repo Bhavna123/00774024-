@@ -1,0 +1,36 @@
+type: object
+x-stoplight:
+  id: yuuem8yorcewu
+title: Mediation
+description: Alterations to an API request to add/remove/validate information prior to sending API request to backend.
+required:
+  - id
+  - createdAt
+  - updatedAt
+properties:
+  id:
+    $ref: ../models/Id.yaml
+    x-stoplight:
+      id: v2z9peaay8ymg
+  dataValidation:
+    $ref: ../models/RowValue.yaml
+    x-stoplight:
+      id: kks5nhj2ls2ee
+  errorResponseMapping:
+    $ref: ../models/RowValue.yaml
+    x-stoplight:
+      id: keloe5a9w8d5c
+  conditionalServerRouting:
+    $ref: ../models/RowValue.yaml
+    x-stoplight:
+      id: erjgqzhoxn4om
+  createdAt:
+    $ref: ../models/CreatedAt.yaml
+    description: The time this record was created
+    x-stoplight:
+      id: tg3hniteed3ia
+  updatedAt:
+    $ref: ../models/CreatedAt.yaml
+    description: The time this record was last updated
+    x-stoplight:
+      id: 81k8439ufjfa4

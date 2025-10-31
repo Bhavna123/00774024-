@@ -1,0 +1,11 @@
+type: string
+x-stoplight:
+  id: fxpc82wx8w6ig
+enum:
+  - submitted
+  - pending_approval
+  - approved
+  - closed
+  - rejected
+description: Role change request status
+example: pending_approval

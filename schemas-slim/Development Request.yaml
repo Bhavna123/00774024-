@@ -1,0 +1,55 @@
+type: object
+x-stoplight:
+  id: aj6rb54jc98gj
+title: Development Request
+description: Support request that asks for an API proxy to be created or enhanced for an API version. The version will be determined during an API design review.
+required:
+  - id
+  - requestStatus
+  - createdAt
+  - updatedAt
+  - ticket
+  - reviewSlot
+properties:
+  id:
+    $ref: ../models/Id.yaml
+    x-stoplight:
+      id: fpm380hw7mv8q
+    description: Database identifier
+  requestStatus:
+    $ref: ./Development Request Request Status.yaml
+    x-stoplight:
+      id: qov3bfn719nw1
+    description: Request status
+  summary:
+    type: string
+    x-stoplight:
+      id: u0jas8jmpil2z
+    description: Summary of the purpose and scope of this request
+    example: Our application needs some addition functionality to support a new mobile use case
+  draftApiName:
+    type: string
+    x-stoplight:
+      id: 1fqkqic5i7tmi
+    description: 'Draft/proposed API name, subject to change and alignment to naming standards during the design review'
+    example: Quote
+  createdAt:
+    $ref: ../models/CreatedAt.yaml
+    description: The time this record was created
+    x-stoplight:
+      id: iuw5oimiaca2x
+  updatedAt:
+    $ref: ../models/UpdatedAt.yaml
+    description: The time this record was last updated
+    x-stoplight:
+      id: iqdf0qqw4wkyx
+  ticket:
+    $ref: ./Ticket.yaml
+    x-stoplight:
+      id: vttfwglzhvjud
+    description: 'Common ticketing attributes, shared by all requests'
+  reviewSlot:
+    $ref: ./Review Slot.yaml
+    x-stoplight:
+      id: x6nqk8i2ullc6
+    description: User-selected design review timeslot

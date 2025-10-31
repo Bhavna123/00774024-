@@ -1,0 +1,73 @@
+type: object
+x-stoplight:
+  id: js282wgzjm0fg
+title: Method Review
+description: The results of reviewing a specific method for a path in an API design document.
+properties:
+  id:
+    $ref: ../models/Id.yaml
+    x-stoplight:
+      id: dukho28ulvc1f
+  method:
+    description: The method being reviewed
+    enum:
+      - GET
+    x-stoplight:
+      id: kzhgtzkstf8d9
+  summary:
+    $ref: ../models/Check.yaml
+    description: The results of reviewing the summary
+    x-stoplight:
+      id: um52u4tf0z9sy
+  description:
+    $ref: ../models/Check.yaml
+    description: The results of reviewing the description
+    x-stoplight:
+      id: 73pfv07f44otx
+  headers:
+    $ref: ../models/Check.yaml
+    description: The results of reviewing the headers
+    x-stoplight:
+      id: ilwg2v7utzrrl
+  queryParameters:
+    $ref: ../models/Check.yaml
+    description: The results of reviewing the query parameters
+    x-stoplight:
+      id: wndj4ync0yzue
+  requestBody:
+    $ref: ../models/Check.yaml
+    description: The results of reviewing the request body
+    x-stoplight:
+      id: k7lfchk396x47
+  successResponses:
+    $ref: ../models/Check.yaml
+    description: The results of reviewing all of the 2xx and 3xx responses
+    x-stoplight:
+      id: nh1zjf1rx8ss1
+  errorResponses:
+    $ref: ../models/Check.yaml
+    description: The results of reviewing all of the 4xx and 5xx responses
+    x-stoplight:
+      id: vo1rha98ju0wm
+  methodUsed:
+    $ref: ../models/Check.yaml
+    description: Was the correct method used for the use case
+    x-stoplight:
+      id: x4q4n0tot4s1k
+  parameters:
+    type: array
+    description: The reviews for parameters that are on this method
+    items:
+      $ref: ./ParameterReview.yaml
+      x-stoplight:
+        id: iemargam0045f
+    x-stoplight:
+      id: f1pfaehm5j3qq
+  createdAt:
+    $ref: ../models/CreatedAt.yaml
+    x-stoplight:
+      id: e1ee3cclspj0t
+  updatedAt:
+    $ref: ../models/UpdatedAt.yaml
+    x-stoplight:
+      id: uwgbkqg9tst7z

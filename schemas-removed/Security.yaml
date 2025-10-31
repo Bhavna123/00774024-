@@ -1,0 +1,33 @@
+type: object
+x-stoplight:
+  id: g3eryxul1w3mr
+title: Security
+description: Attack and data protection at the proxy level.
+required:
+  - id
+  - createdAt
+  - updatedAt
+properties:
+  id:
+    $ref: ../models/Id.yaml
+    x-stoplight:
+      id: vpb1qhmy6pp6g
+    description: Database identifier
+  threatProtection:
+    $ref: ../models/RowValue.yaml
+    x-stoplight:
+      id: 7xmvbss19lv43
+  payloadLogging:
+    $ref: ../models/RowValue.yaml
+    x-stoplight:
+      id: l0l4hwjs7ykrq
+  createdAt:
+    $ref: ../models/CreatedAt.yaml
+    description: The time this record was created
+    x-stoplight:
+      id: 402tiarfbf0x8
+  updatedAt:
+    $ref: ../models/UpdatedAt.yaml
+    description: The time this record was last updated
+    x-stoplight:
+      id: mdmmlkxxc4jh7

@@ -1,0 +1,42 @@
+type: object
+x-stoplight:
+  id: 20ysr6setsln3
+title: Traffic Management
+description: Information on how request traffic is managed.
+required:
+  - id
+  - createdAt
+  - updatedAt
+properties:
+  id:
+    $ref: ../models/Id.yaml
+    x-stoplight:
+      id: q95g21h20590z
+    description: Database identifier
+  responseCache:
+    $ref: ../models/RowValue.yaml
+    x-stoplight:
+      id: ytpvkisqj7rq7
+  cachedRoutes:
+    $ref: ../models/RowValue.yaml
+    x-stoplight:
+      id: enbm54ljlgzts
+  cachedDuration:
+    type: string
+    x-stoplight:
+      id: 2ys5tadh9ai7n
+    description: TTL (Time to Live) for the cache item existence
+  enableMocking:
+    $ref: ../models/RowValue.yaml
+    x-stoplight:
+      id: tsmx70802qiop
+  createdAt:
+    $ref: ../models/CreatedAt.yaml
+    description: The time this record was created
+    x-stoplight:
+      id: pa3138uwnq961
+  updatedAt:
+    $ref: ../models/UpdatedAt.yaml
+    description: The time this record was last updated
+    x-stoplight:
+      id: ut13s3ik8lyeh

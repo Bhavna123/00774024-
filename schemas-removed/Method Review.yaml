@@ -1,0 +1,73 @@
+type: object
+x-stoplight:
+  id: 9wvfgvx8069s3
+title: Method Review
+description: The results of reviewing a specific method for a path in an API design document.
+properties:
+  id:
+    $ref: ../models/Id.yaml
+    x-stoplight:
+      id: v4nt9cajrxnqs
+  method:
+    description: The method being reviewed
+    enum:
+      - GET
+    x-stoplight:
+      id: dxfu8qmb2rfw2
+  summary:
+    $ref: ../models/Check.yaml
+    description: The results of reviewing the summary
+    x-stoplight:
+      id: o56k93tyut3ho
+  description:
+    $ref: ../models/Check.yaml
+    description: The results of reviewing the description
+    x-stoplight:
+      id: jgtxf0a7ke6mh
+  headers:
+    $ref: ../models/Check.yaml
+    description: The results of reviewing the headers
+    x-stoplight:
+      id: 5v2t40c3klcvv
+  queryParameters:
+    $ref: ../models/Check.yaml
+    description: The results of reviewing the query parameters
+    x-stoplight:
+      id: q15nmjdm2pqxk
+  requestBody:
+    $ref: ../models/Check.yaml
+    description: The results of reviewing the request body
+    x-stoplight:
+      id: ij0b71c1xu7z4
+  successResponses:
+    $ref: ../models/Check.yaml
+    description: The results of reviewing all of the 2xx and 3xx responses
+    x-stoplight:
+      id: w00tqp02zebkx
+  errorResponses:
+    $ref: ../models/Check.yaml
+    description: The results of reviewing all of the 4xx and 5xx responses
+    x-stoplight:
+      id: jxc7tlyyk88v7
+  methodUsed:
+    $ref: ../models/Check.yaml
+    description: Was the correct method used for the use case
+    x-stoplight:
+      id: i0urns88peq1u
+  parameters:
+    type: array
+    description: The reviews for parameters that are on this method
+    items:
+      $ref: ./Parameter Review.yaml
+      x-stoplight:
+        id: ki50pe9z1wlm8
+    x-stoplight:
+      id: zazgc4ujg33um
+  createdAt:
+    $ref: ../models/CreatedAt.yaml
+    x-stoplight:
+      id: g9apj7cvjjy5r
+  updatedAt:
+    $ref: ../models/UpdatedAt.yaml
+    x-stoplight:
+      id: l37zj9en9x31e

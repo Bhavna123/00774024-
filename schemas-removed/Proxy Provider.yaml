@@ -1,0 +1,41 @@
+type: object
+x-stoplight:
+  id: kxsww0ocg7yhn
+description: |-
+  An application that implements operations for an API major version. It is responsible for secured access and management of an underlying data source.
+
+  It is also referred to as a backend system because it lies behind the API proxy from the point of view of an consuming application.
+required:
+  - isBehindReverseProxy
+  - createdAt
+  - updatedAt
+  - applicationAsset
+  - proxy
+properties:
+  isBehindReverseProxy:
+    type: boolean
+    x-stoplight:
+      id: 4vzncx4lm6yei
+    default: false
+    description: Whether or not the application server lies behind an SE regional reverse proxy. If it is hosted inside the SE VPN then it is accessed via a reverse proxy
+  createdAt:
+    $ref: ../models/CreatedAt.yaml
+    description: The time this record was created
+    x-stoplight:
+      id: zojcnn32lrljw
+  updatedAt:
+    $ref: ../models/UpdatedAt.yaml
+    description: The time this record was last updated
+    x-stoplight:
+      id: ms6a446ao7pis
+  applicationAsset:
+    $ref: ./Application Asset.yaml
+    x-stoplight:
+      id: 1mseyek5z42ts
+    description: Unique asset id and name in the SE asset system
+  proxy:
+    $ref: ./Proxy.yaml
+    x-stoplight:
+      id: 0c3ltclo6k0wg
+    description: API Proxy
+title: Proxy Provider

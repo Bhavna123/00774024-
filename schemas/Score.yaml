@@ -1,0 +1,62 @@
+type: object
+x-stoplight:
+  id: d03e81july0hc
+description: |-
+  Assessed quality score for this API. Scoring is based on:
+
+  - criteria defined for good quality API documentation and implementation
+
+  - completeness of catalog information for the API
+
+  At this level, score values are combined from lower level scores for the latest proxy and version records. The resource is read-only because the calculation is performed by the database layer
+required:
+  - apiName
+  - catalogScore
+  - qualityScore
+  - updatedAt
+  - createdAt
+properties:
+  apiName:
+    type: string
+    x-stoplight:
+      id: c3em1kzh7o7w9
+    example: Quote
+    description: The API name
+    readOnly: true
+  catalogScore:
+    type: number
+    format: float
+    x-stoplight:
+      id: 6g4mkmvp7vvd7
+    description: Combined catalog completness score
+    example: 80
+    readOnly: true
+  unscoredFields:
+    type: array
+    x-stoplight:
+      id: 54zapon47qloj
+    description: List of catalog fields with no value. Populating these fields will increase the catalogScore
+    items:
+      x-stoplight:
+        id: 04llskxrbj0v7
+      type: string
+      example: capabilities
+    readOnly: true
+  qualityScore:
+    type: number
+    format: float
+    x-stoplight:
+      id: g7z9e99ud52he
+    description: Combined proxy and document quality score
+    example: 77.75
+    readOnly: true
+  updatedAt:
+    $ref: ../models/UpdatedAt.yaml
+    description: The time this record was last updated
+    x-stoplight:
+      id: bts0qn1aoy9me
+  createdAt:
+    $ref: ../models/CreatedAt.yaml
+    description: The time this record was created
+    x-stoplight:
+      id: 4y06fef5bkrfc

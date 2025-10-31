@@ -1,0 +1,51 @@
+type: object
+x-stoplight:
+  id: ks8iozxhmutrb
+title: Environment
+description: 'Relationship between one set of requirements, and one specific SEAPIM deployment environment, CORS domain configuration, providers and consumers.'
+required:
+  - id
+  - environment
+  - createdAt
+  - updatedAt
+  - environmentDomains
+  - environmentProviders
+properties:
+  id:
+    $ref: ../models/Id.yaml
+    x-stoplight:
+      id: ez3ejcnvxkjo6
+    description: Database identifier
+  environment:
+    $ref: ./SEAPIM Environment.yaml
+    x-stoplight:
+      id: jvygsayu9q77x
+    description: A SEAPIM deployment environment
+  createdAt:
+    $ref: ../models/CreatedAt.yaml
+    description: The time this record was created
+    x-stoplight:
+      id: xud18ge0tnysn
+  updatedAt:
+    $ref: ../models/UpdatedAt.yaml
+    description: The time this record was last updated
+    x-stoplight:
+      id: 6k9iml4g0m7dq
+  environmentDomains:
+    type: array
+    x-stoplight:
+      id: vz9vrmf0r49oi
+    description: List of application domains used for CORS configuration
+    items:
+      $ref: ./Environment Domain.yaml
+      x-stoplight:
+        id: 1tt2ktxakpe2v
+  environmentProviders:
+    type: array
+    x-stoplight:
+      id: 07cuvv1ffdxy3
+    description: Environment-specific list of API provider applications (backends)
+    items:
+      $ref: ./Environment Provider.yaml
+      x-stoplight:
+        id: r23c246xq2m9n

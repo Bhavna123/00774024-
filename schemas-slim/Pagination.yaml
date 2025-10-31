@@ -1,0 +1,21 @@
+type: object
+x-stoplight:
+  id: nbu91x1ht1gik
+x-examples:
+  Example 1:
+    page: 0
+    size: 0
+    totalItems: 0
+title: Pagination
+description: Information provided when paginating through a result set.
+properties:
+  page:
+    type: integer
+    description: The page number being provided
+    x-stoplight:
+      id: dq9g78ulaxi8l
+  pages:
+    type: integer
+    description: Total number of pages
+    x-stoplight:
+      id: js8ogzke08wll

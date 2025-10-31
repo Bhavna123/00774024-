@@ -1,0 +1,43 @@
+type: object
+x-stoplight:
+  id: xem0sagkmurh9
+title: Development Request
+description: Support request that asks for an API proxy to be created or enhanced for an API version. The version will be determined during an API design review.
+required:
+  - id
+  - requestStatus
+  - createdAt
+  - updatedAt
+properties:
+  id:
+    $ref: ../models/Id.yaml
+    x-stoplight:
+      id: wrv17seu4qxzq
+    description: Database identifier
+  requestStatus:
+    $ref: ./Development Request Request Status.yaml
+    x-stoplight:
+      id: v1xgr7w4jx0gr
+    description: Request status
+  summary:
+    type: string
+    x-stoplight:
+      id: quzib0mu4ivk4
+    description: Summary of the purpose and scope of this request
+    example: Our application needs some addition functionality to support a new mobile use case
+  draftApiName:
+    type: string
+    x-stoplight:
+      id: mmqw9i7fg38l0
+    description: 'Draft/proposed API name, subject to change and alignment to naming standards during the design review'
+    example: Quote
+  createdAt:
+    $ref: ../models/CreatedAt.yaml
+    description: The time this record was created
+    x-stoplight:
+      id: hqw4lxlo5aara
+  updatedAt:
+    $ref: ../models/UpdatedAt.yaml
+    description: The time this record was last updated
+    x-stoplight:
+      id: 2vy9seb0hdf5o

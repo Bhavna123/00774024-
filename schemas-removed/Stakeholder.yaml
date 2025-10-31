@@ -1,0 +1,51 @@
+type: object
+x-stoplight:
+  id: 3gq1mog24m6z0
+description: 'Person with some involvement in an API lifecycle, identified by their email and optionally a SESA id.'
+required:
+  - id
+  - email
+  - createdAt
+  - updatedAt
+properties:
+  id:
+    $ref: ../models/Id.yaml
+    x-stoplight:
+      id: 38rjprtpg41xq
+    description: Database identifier
+  email:
+    type: string
+    x-stoplight:
+      id: cjex1z6pj7env
+    description: Unique email address for this stakeholder
+    example: user@example.com
+  roles:
+    type: array
+    x-stoplight:
+      id: hmdeys2s1ca5i
+    description: 'Stakeholder roles. If not set, user is the default role.'
+    items:
+      x-stoplight:
+        id: y95tsrb52n59v
+      enum:
+        - user
+        - admin
+        - api_owner
+        - app_owner
+  sesaId:
+    type: string
+    x-stoplight:
+      id: m5ypy4piqarfe
+    description: Schneider electric corporate id
+    example: SESA12345
+  createdAt:
+    $ref: ../models/CreatedAt.yaml
+    description: The time this record was created
+    x-stoplight:
+      id: 6wps5yaghrucu
+  updatedAt:
+    $ref: ../models/UpdatedAt.yaml
+    description: The time this record was last updated
+    x-stoplight:
+      id: rzs8d0z22swbn
+title: Stakeholder

@@ -1,0 +1,111 @@
+type: object
+x-stoplight:
+  id: u2wxwc0mar24g
+description: |-
+  Common attributes for a support ticket that is tracked in a Ticketing System.
+
+  Depending on the value of ticketType, one if the request fields will be populated with attributes specific to the ticket type.
+required:
+  - id
+  - ticketNumber
+  - ticketType
+  - createdAt
+  - updatedAt
+  - requester
+  - request
+properties:
+  id:
+    $ref: ../models/Id.yaml
+    x-stoplight:
+      id: ltap696h0qul2
+    description: Database identifier
+  ticketNumber:
+    type: string
+    x-stoplight:
+      id: ya2px0am38p6u
+    description: Unique ticket number in the ticketing system instance
+    example: CTOP-1234
+  ticketType:
+    $ref: ./Ticket Ticket Type.yaml
+    x-stoplight:
+      id: 05h0nbu8t46f7
+    description: Ticket type that determines the child request record
+  watchers:
+    type: array
+    x-stoplight:
+      id: 1gvdmlwatglou
+    description: List of ticket watcher emails
+    items:
+      x-stoplight:
+        id: moz219ls64ez4
+      type: string
+      format: email
+      example: watcher@se.com
+  justification:
+    type: string
+    x-stoplight:
+      id: 0ztcmgfo53k1e
+    description: Justification provided by the requester
+    example: Need access to the Order API for mobile app which will be used by salespeople
+  closedOn:
+    type: string
+    format: date-time
+    x-stoplight:
+      id: oeflxyhwuu0bc
+    description: Date the ticket was closed
+  createdAt:
+    $ref: ../models/CreatedAt.yaml
+    description: The time this record was created
+    x-stoplight:
+      id: 0r1pgiqy7ten4
+  updatedAt:
+    $ref: ../models/UpdatedAt.yaml
+    description: The time this record was last updated
+    x-stoplight:
+      id: aueywi1jj97mj
+  proxy:
+    $ref: ./Proxy.yaml
+    x-stoplight:
+      id: lrvvr36qn7r8y
+    description: API proxy related this this ticket
+  apiOwner:
+    $ref: ./Stakeholder.yaml
+    x-stoplight:
+      id: dhli59cz57mog
+    description: Person who is the API owner for this ticket
+  appOwner:
+    $ref: ./Stakeholder.yaml
+    x-stoplight:
+      id: qoqzqtgl6cyhz
+    description: Person who is the application owner for this ticket
+  requester:
+    $ref: ./Stakeholder.yaml
+    x-stoplight:
+      id: kcsfolihkir9g
+    description: Person who requested this ticket
+  request:
+    x-stoplight:
+      id: ojwu5gclczc7j
+    oneOf:
+      - $ref: ./Development Request.yaml
+        x-stoplight:
+          id: e6yrguyw7tp22
+        description: Proxy development request
+      - $ref: ./Certification Request.yaml
+        x-stoplight:
+          id: qxfrk8hfa612l
+        description: Version certification request
+      - $ref: ./Role Change Request.yaml
+        x-stoplight:
+          id: 6b0ejajbnyc3t
+        description: API stakeholder role change request
+      - $ref: ./Decommission Request.yaml
+        x-stoplight:
+          id: 5eohjw0ueex7i
+        description: Proxy or application decommission request
+      - $ref: ./Subscription Request.yaml
+        x-stoplight:
+          id: rhuzb5rk80rzr
+        description: Application subscription to an API
+    description: Request-specific attributes associated with the specified ticketType
+title: Ticket

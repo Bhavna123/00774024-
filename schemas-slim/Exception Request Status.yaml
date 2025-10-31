@@ -1,0 +1,11 @@
+type: string
+x-stoplight:
+  id: 0j24ytwctg4kx
+enum:
+  - submitted
+  - approved
+  - rejected
+  - closed
+description: Exception request status
+default: submitted
+example: approved
