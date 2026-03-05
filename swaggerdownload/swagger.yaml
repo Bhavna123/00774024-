@@ -1,0 +1,1769 @@
+asyncapi: 3.0.0
+info:
+  title: Execution service Kafka API
+  version: 1.0.2
+  description: >-
+    Execution service is used to send the purchase orders created by
+    Purchase-Order-Management (POM) to TrueCommerce
+  x-servicenow:
+    servicecatalogueID: '1016715'
+    externalDocs:
+      url: >-
+        https://sainsburys.service-now.com/now/nav/ui/classic/params/target/cmdb_ci_appl.do%3Fsys_id%3Dc2860c6c1b4f49108b70855bd34bcb39
+defaultContentType: application/avro
+servers:
+  dev-cluster:
+    host: lkc-y6xwp-ld0o4.eu-west-1.aws.glb.confluent.cloud:9092
+    protocol: kafka-secure
+    description: Confluent Kafka dev cluster
+    security:
+      - type: scramSha256
+        description: Provide your username and password for SASL/SCRAM authentication
+  dev-schema-registry:
+    host: https://psrc-4v1qj.eu-central-1.aws.confluent.cloud
+    protocol: kafka-secure
+    description: Confluent Kafka Schema Registry Server
+    security:
+      - type: scramSha256
+        description: Provide your username and password for SASL/SCRAM authentication
+channels:
+  sainsburys.data.sc-pom.purchase-order-event.v0:
+    address: sainsburys.data.sc-pom.purchase-order-event.v0
+    bindings:
+      kafka:
+        partitions: 1
+        replicas: 3
+        topicConfiguration:
+          retention.ms: 604800000
+          cleanup.policy:
+            - delete
+    messages:
+      publishPurchaseOrderEvent.message:
+        name: purchaseOrderEvent
+        title: Purchase order event
+        summary: >-
+          Sends the start and end event for each Purchase Order Batch(Grouping
+          is done based on supplier) sent to True commerce. The event will also
+          contain the list of Purchase Order Numbers sent to True Commerce.
+        contentType: application/avro
+        payload:
+          schemaFormat: application/vnd.apache.avro;version=1.9.0
+          schema:
+            namespace: uk.co.sainsburys.supplychain.pom.avro.purchaseorderevent
+            type: record
+            name: PurchaseOrderEventSchema
+            doc: >-
+              Schema for Purchase Order Event notification to the EDI
+              coordinator
+            fields:
+              - name: udcBatchCorrelationID
+                type: string
+                doc: >-
+                  Batch correlation Id (BCID). This field will help True
+                  Commerce to group the orders into a single TRADACOM EDI file
+              - name: legacySupplierId
+                type:
+                  - 'null'
+                  - string
+                default: null
+                doc: Supplier/SupplierSite Id in legacy/finance format.
+              - name: eventStartOrEnd
+                type: string
+                doc: >-
+                  This attribute will notify about the start or the end event.
+                  Valid Values – Start , End
+              - name: numberOfMessagesInBatch
+                type:
+                  - 'null'
+                  - int
+                default: null
+                doc: >-
+                  This attribute will give total number of orders under batch
+                  correlationId
+              - name: creationTimeUTC
+                type:
+                  type: long
+                  logicalType: timestamp-millis
+                doc: Time when this event was published by producer
+              - name: orderNumbers
+                type:
+                  - 'null'
+                  - type: array
+                    items: string
+                default: null
+                doc: List of order numbers associated with this batch correlationID
+        headers:
+          type: object
+          properties:
+            messageKey:
+              type: string
+              description: >-
+                This field will be used to uniquely identify the message. It is
+                derived by joining supplierId with message creation time
+        examples:
+          - name: A sample purchase order start event
+            summary: >-
+              Please refer the below sample to get an idea of how start event
+              will look like
+            headers:
+              messageKey: 48tj3z8p-20230608012943921801623
+            payload:
+              udcBatchCorrelationID: 48tj3z8p-20230608012943921801623
+              legacySupplierId: E0274
+              eventStartOrEnd: START
+              numberOfMessagesInBatch: 4
+              creationTimeUTC: '2023-06-08T01:29:43.921Z'
+              orderNumbers:
+                - E02741080145
+                - E02740199145
+                - E02740478145
+                - E02741644145
+          - name: A sample purchase order end event
+            summary: >-
+              Please refer the below sample to get an idea of how end event will
+              look like
+            headers:
+              messageKey: 48tj3z8p-20230608012943921801623
+            payload:
+              udcBatchCorrelationID: 48tj3z8p-20230608012943921801623
+              legacySupplierId: E0274
+              eventStartOrEnd: END
+              numberOfMessagesInBatch: 4
+              creationTimeUTC: '2023-06-08T01:29:43.921Z'
+              orderNumbers:
+                - E02741080145
+                - E02740199145
+                - E02740478145
+                - E02741644145
+    description: The topic contains events which are published by po-execution-service
+    summary: >-
+      START and END events are expected to be published for each supplier. This
+      event will contain the list of Purchase Order Numbers being sent to TC for
+      that supplier.
+  sainsburys.data.sc-pom.purchase-order.v0:
+    address: sainsburys.data.sc-pom.purchase-order.v0
+    bindings:
+      kafka:
+        partitions: 1
+        replicas: 3
+        topicConfiguration:
+          retention.ms: 604800000
+          cleanup.policy:
+            - delete
+    messages:
+      publishPurchaseOrder.message:
+        name: purchaseOrder
+        title: Purchase Order
+        summary: Sends the purchase order to True Commerce.
+        contentType: application/avro
+        payload:
+          schemaFormat: application/vnd.apache.avro;version=1.9.0
+          schema:
+            namespace: uk.co.sainsburys.supplychain.pom.avro.purchaseorder
+            type: record
+            name: PurchaseOrderSchema
+            doc: >-
+              Schema for Purchase Orders Message published by POM team in GS1
+              format
+            fields:
+              - name: udcBatchCorrelationID
+                type: string
+                doc: >-
+                  Batch correlation Id (BCID). This field will help True
+                  Commerce to group the orders into a single TRADACOM EDI file
+              - name: standardBusinessDocumentHeader
+                doc: >-
+                  Standard Business Document Header (SBDH) is a header that can
+                  be used to wrap any business document, regardless of the
+                  syntax of the business document
+                type:
+                  name: StandardBusinessDocumentHeaderSchema
+                  type: record
+                  fields:
+                    - name: headerVersion
+                      type: string
+                      default: '1.0'
+                      doc: The version number of the SBDH standard used
+                    - name: sender
+                      doc: >-
+                        The sender of the message, party representing the
+                        organization that created the standard business document
+                      type:
+                        type: array
+                        items:
+                          name: SenderSchema
+                          type: record
+                          fields:
+                            - name: identifier
+                              type: string
+                              default: J.SAINSBURY PLC
+                              doc: >-
+                                The sender of the message, party representing
+                                the organization that created the standard
+                                business document
+                            - name: contactInformation
+                              doc: The contact information for the sender
+                              type:
+                                name: SenderContactInformationSchema
+                                type: record
+                                fields:
+                                  - name: contactTypeIdentifier
+                                    type: string
+                                    default: Purchase Order Management
+                                    doc: Role of the identifier
+                    - name: receiver
+                      doc: >-
+                        The receiver of the message, the party representing the
+                        organization that receives the standard business
+                        document
+                      type:
+                        type: array
+                        items:
+                          name: ReceiverSchema
+                          type: record
+                          fields:
+                            - name: identifier
+                              type: string
+                              doc: >-
+                                The receiver of the message, the party
+                                representing the organization that receives the
+                                standard business document
+                            - name: contactInformation
+                              doc: Contact information for the receiver
+                              type:
+                                name: ReceiverContactInformationSchema
+                                type: record
+                                fields:
+                                  - name: contactTypeIdentifier
+                                    type: string
+                                    doc: Role of the identifier.
+                    - name: documentIdentification
+                      doc: >-
+                        The document identification contains reference
+                        information that uniquely identifies this instance of
+                        the Standard Business Document (SBD) between the
+                        ‘Sender’ and the ‘Receiver’.
+                      type:
+                        name: DocumentIdentificationSchema
+                        type: record
+                        fields:
+                          - name: standard
+                            type: string
+                            default: GS1
+                            doc: >-
+                              The name of the document standard contained in the
+                              payload
+                          - name: typeVersion
+                            type: string
+                            default: '3.5'
+                            doc: >-
+                              The version number of the root schema of the XML
+                              business document is contained in the payload of
+                              the message
+                          - name: instanceIdentifier
+                            type: string
+                            default: GUID
+                            doc: >-
+                              The description contains reference information
+                              that uniquely identifies this instance of the
+                              Standard Business Document (SBD) between the
+                              ‘Sender’ and the ‘Receiver’
+                          - name: type
+                            type: string
+                            default: PurchaseOrder
+                            doc: This element identifies the type of document.
+                          - name: multipleType
+                            type: boolean
+                            default: false
+                            doc: >-
+                              Flag to indicate that there is more than one type
+                              of business document in the payload of the SBDH.
+                          - name: creationDateTime
+                            type:
+                              type: long
+                              logicalType: timestamp-millis
+                            doc: >-
+                              Date and time of the SBDH document creation. This
+                              stores the number of milliseconds from the unix
+                              epoch, 1 January 1970 00:00:00.000 UTC
+              - name: order
+                doc: An array of purchase orders
+                type:
+                  type: array
+                  items:
+                    name: OrderSchema
+                    type: record
+                    fields:
+                      - name: creationDateTime
+                        type:
+                          type: long
+                          logicalType: timestamp-millis
+                        doc: >-
+                          Date and time when the purchase order was created.
+                          This stores the number of milliseconds from the unix
+                          epoch, 1 January 1970 00:00:00.000 UTC
+                      - name: documentStatusCode
+                        type: string
+                        default: ORIGINAL
+                        doc: >-
+                          Indicates if the document is a copy or an original.
+                          Valid Values : ADDITIONAL_TRANSMISSION, COPY and
+                          ORIGINAL.
+                      - name: documentActionCode
+                        type: string
+                        doc: >-
+                          Code specifying the action to be taken in the system
+                          of the recipient using the information in the
+                          document. Valid Values : ADD, CHANGE_BY_REFRESH and
+                          DELETE
+                      - name: documentStructureVersion
+                        type: string
+                        default: '3.5'
+                        doc: >-
+                          Specification of the version of the standard on which
+                          the structure of the document is based
+                      - name: lastUpdateDateTime
+                        type:
+                          type: long
+                          logicalType: timestamp-millis
+                        doc: >-
+                          Date and time when the purchase order was last
+                          updated. This stores the number of milliseconds from
+                          the unix epoch, 1 January 1970 00:00:00.000 UTC
+                      - name: revisionNumber
+                        type: int
+                        doc: >-
+                          Number to be used for identification and referencing
+                          of subsequent updates to a business document
+                      - name: documentEffectiveDate
+                        doc: >-
+                          The date and time that the document becomes effective
+                          from the commercial or legal point of view
+                        type:
+                          name: DocumentEffectiveDateSchema
+                          type: record
+                          fields:
+                            - name: date
+                              type:
+                                type: int
+                                logicalType: date
+                              doc: >-
+                                The date that the document becomes effective
+                                from the commercial or legal point of view. This
+                                stores the number of days from the unix epoch, 1
+                                January 1970
+                            - name: time
+                              type:
+                                type: int
+                                logicalType: time-millis
+                              doc: >-
+                                The time that the document becomes effective
+                                from the commercial or legal point of view. This
+                                stores the number of milliseconds after
+                                midnight, 00:00:00.000
+                      - name: orderIdentification
+                        doc: >-
+                          A unique identification of the Order. This is the
+                          document number/id which will be communicated to the
+                          supplier
+                        type:
+                          name: OrderIdentificationSchema
+                          type: record
+                          fields:
+                            - name: entityIdentifier
+                              type: string
+                              doc: >-
+                                The unique identification of the Order. This is
+                                the document number/id which will be
+                                communicated to the supplier
+                      - name: orderTypeCode
+                        type: string
+                        default: '220'
+                        doc: >-
+                          Identifies the kind of purchase order, enabling the
+                          recipient of the order to determine the appropriate
+                          processing
+                      - name: buyer
+                        doc: The party to which products or services are sold
+                        type:
+                          name: BuyerSchema
+                          type: record
+                          fields:
+                            - name: gln
+                              type:
+                                - 'null'
+                                - string
+                              default: null
+                              doc: >-
+                                Identifies the party to which products or
+                                services are sold
+                      - name: seller
+                        doc: The party which sells products or services to a buyer
+                        type:
+                          name: SellerSchema
+                          type: record
+                          fields:
+                            - name: gln
+                              type:
+                                - 'null'
+                                - string
+                              default: null
+                              doc: >-
+                                Identifies the party which sells products or
+                                services to a buyer
+                      - name: orderLogisticalInformation
+                        doc: Logistical information for the order
+                        type:
+                          name: OrderLogisticalInformationSchema
+                          type: record
+                          fields:
+                            - name: shipFrom
+                              doc: The location from which goods will be shipped
+                              type:
+                                name: ShipFromSchema
+                                type: record
+                                fields:
+                                  - name: additionalPartyIdentification
+                                    type:
+                                      type: array
+                                      items:
+                                        - name: >-
+                                            ShipFromAdditionalPartyIdentificationSchema
+                                          type: record
+                                          fields:
+                                            - name: additionalPartyIdentificationTypeCode
+                                              type: string
+                                              doc: >-
+                                                Type code to segregate different ship
+                                                locations. Valid Values :
+                                                FOR_INTERNAL_USE_1 and
+                                                FOR_INTERNAL_USE_2
+                                            - name: additionalPartyIdentificationValue
+                                              type: string
+                                              doc: >-
+                                                Identifies the source location from
+                                                which goods will be shipped. Valid
+                                                values are Strategic-SUPPLIER_ID and
+                                                Legacy/Finance-SUPPLIER_ID respectively
+                                                for FOR_INTERNAL_USE_1 and
+                                                FOR_INTERNAL_USE_2
+                                    doc: >-
+                                      An array containing values for strategic
+                                      and legacy supplierId
+                            - name: shipTo
+                              doc: The location to which goods will be shipped
+                              type:
+                                name: ShipToSchema
+                                type: record
+                                fields:
+                                  - name: additionalPartyIdentification
+                                    type:
+                                      type: array
+                                      items:
+                                        - name: >-
+                                            ShipToAdditionalPartyIdentificationSchema
+                                          type: record
+                                          fields:
+                                            - name: additionalPartyIdentificationTypeCode
+                                              type: string
+                                              doc: >-
+                                                Type code to segregate different ship
+                                                locations. Valid Values :
+                                                FOR_INTERNAL_USE_1 and
+                                                FOR_INTERNAL_USE_2
+                                            - name: additionalPartyIdentificationValue
+                                              type: string
+                                              doc: >-
+                                                Identifies the destination location to
+                                                which goods will be shipped. Valid
+                                                values are Strategic-STORE_ID and
+                                                Legacy/RMS-STORE_ID respectively for
+                                                FOR_INTERNAL_USE_1 and
+                                                FOR_INTERNAL_USE_2
+                                    doc: >-
+                                      An array containing values for strategic
+                                      and legacy locationId
+                            - name: orderLogisticalDateInformation
+                              doc: >-
+                                The date and time on which the goods are
+                                requested to be delivered
+                              type:
+                                name: OrderLogisticalDateInformationSchema
+                                type: record
+                                fields:
+                                  - name: requestedDeliveryDateTime
+                                    doc: >-
+                                      The date and time on which the goods are
+                                      requested to be delivered
+                                    type:
+                                      name: RequestedDeliveryDateTimeSchema
+                                      type: record
+                                      fields:
+                                        - name: date
+                                          type:
+                                            type: int
+                                            logicalType: date
+                                          doc: >-
+                                            Provides the date and optional time on
+                                            which the goods are requested to be
+                                            delivered. This stores the number of
+                                            days from the unix epoch, 1 January 1970
+                                        - name: time
+                                          type:
+                                            type: int
+                                            logicalType: time-millis
+                                          doc: >-
+                                            Provides the time on which the goods are
+                                            requested to be delivered.  This stores
+                                            the number of milliseconds after
+                                            midnight, 00:00:00.000
+                            - name: avpList
+                              type:
+                                type: array
+                                items:
+                                  - name: OrderAvpListSchema
+                                    type: record
+                                    fields:
+                                      - name: name
+                                        doc: Name of the attribute
+                                        type: string
+                                      - name: value
+                                        doc: Value of the attribute
+                                        type:
+                                          - string
+                                          - boolean
+                              doc: >-
+                                An array containing the name-value pair for
+                                udcOrderFormat(Value Type-string),
+                                udcIsOrderMultiLocation(Value Type-boolean),
+                                udcOrderId(Value Type-string),
+                                udcOrderstatus(Value Type-string)
+                            - name: orderLineItem
+                              doc: An array of line items associated with the order
+                              type:
+                                type: array
+                                items:
+                                  - name: OrderLineItemSchema
+                                    type: record
+                                    fields:
+                                      - name: lineItemNumber
+                                        type: long
+                                        doc: >-
+                                          Provides the line number associated with
+                                          the Order Line Item
+                                      - name: requestedQuantity
+                                        doc: >-
+                                          The quantity which has been requested in
+                                          the order
+                                        type:
+                                          name: RequestedQuantitySchema
+                                          type: record
+                                          fields:
+                                            - name: measurementUnitCode
+                                              type: string
+                                              doc: >-
+                                                Unique identifier of the unit in which
+                                                the product is measured in orders
+                                            - name: value
+                                              type: double
+                                              doc: >-
+                                                The quantity which has been requested in
+                                                the order
+                                      - name: lineItemActionCode
+                                        type: string
+                                        doc: >-
+                                          Provides the activity required by the
+                                          recipient on the line item of this
+                                          order. Valid Values :
+                                          ADDITION,CHANGED,DELETED,NOT_ACCEPTED,NOT_AMENDED
+                                          and PENDING
+                                      - name: transactionalTradeItem
+                                        doc: >-
+                                          The trade item (product or service)
+                                          which is the subject of the order line
+                                          item
+                                        type:
+                                          name: TransactionalTradeItemSchema
+                                          type: record
+                                          fields:
+                                            - name: gtin
+                                              type:
+                                                - 'null'
+                                                - string
+                                              doc: >-
+                                                The GS1 Identification Key used to
+                                                identify trade items
+                                              default: null
+                                            - name: additionalTradeItemIdentification
+                                              type:
+                                                type: array
+                                                items:
+                                                  - name: AdditionalTradeItemIdentificationSchema
+                                                    type: record
+                                                    fields:
+                                                      - name: >-
+                                                          additionalTradeItemIdentificationTypeCode
+                                                        type: string
+                                                        doc: >-
+                                                          The label is used to add the traded item
+                                                          equivalent code used by the buying
+                                                          organization. Valid Values :
+                                                          FOR_INTERNAL_USE_1 and
+                                                          FOR_INTERNAL_USE_2
+                                                      - name: additionalTradeItemIdentificationValue
+                                                        type: string
+                                                        doc: >-
+                                                          Traded item equivalent code which
+                                                          represents the item. Valid values are
+                                                          SAIN_ID and RMS SKU_ID respectively for
+                                                          FOR_INTERNAL_USE_1 and
+                                                          FOR_INTERNAL_USE_2
+                                              doc: >-
+                                                An array containing values for strategic
+                                                and legacy productId
+                                            - name: tradeItemDescription
+                                              type: string
+                                              doc: >-
+                                                Textual description/name of the trade
+                                                item
+                                      - name: avpList
+                                        type:
+                                          type: array
+                                          items:
+                                            - name: OrderLineItemAvpListSchema
+                                              type: record
+                                              fields:
+                                                - name: name
+                                                  doc: Name of the attribute
+                                                  type: string
+                                                - name: value
+                                                  doc: Value of the attribute
+                                                  type:
+                                                    - type: int
+                                                      logicalType: date
+                                                    - double
+                                                    - string
+                                        doc: >-
+                                          An array containing name-value pair for
+                                          udcPacksize(value
+                                          Type-double),udcOrderplacementdate(value
+                                          Type-integer) ( This stores the number
+                                          of days from the unix epoch, 1 January
+                                          1970),udcOrderplanid(value Type-string)
+        headers:
+          type: object
+          properties:
+            messageKey:
+              type: string
+              description: >-
+                This field will have the same value for all purchase orders in a
+                given batch. The value will match the message key of purchase
+                order event.
+        examples:
+          - name: A sample purchase order message
+            summary: >-
+              Please refer the below sample to get an idea of how purchase order
+              will look like
+            headers:
+              messageKey: 48tj3z8p-20230608012943921801623
+            payload:
+              udcBatchCorrelationID: 48tj3z8p-20230608012943921801623
+              standardBusinessDocumentHeader:
+                headerVersion: '1.0'
+                sender:
+                  - identifier: J.SAINSBURY PLC
+                    contactInformation:
+                      contactTypeIdentifier: Purchase Order Management
+                receiver:
+                  - identifier: TRUECOMMERCE
+                    contactInformation:
+                      contactTypeIdentifier: EDI co-ordinator
+                  - identifier: J.SAINSBURY PLC
+                    contactInformation:
+                      contactTypeIdentifier: Purchase Order Management consumers
+                documentIdentification:
+                  standard: GS1
+                  typeVersion: '3.5'
+                  instanceIdentifier: 48tj3z8p-20230608012943921801623
+                  type: PurchaseOrder
+                  multipleType: false
+                  creationDateTime: '2023-06-08T01:29:43.921Z'
+              order:
+                - creationDateTime: '2023-06-08T01:29:08.468Z'
+                  documentStatusCode: ORIGINAL
+                  documentActionCode: ADD
+                  documentStructureVersion: '3.5'
+                  lastUpdateDateTime: '2023-06-08T01:29:08.468Z'
+                  revisionNumber: 0
+                  documentEffectiveDate:
+                    date: '2023-06-08'
+                    time: '01:29:08.468'
+                  orderIdentification:
+                    entityIdentifier: E02740477145
+                  orderTypeCode: '220'
+                  buyer:
+                    gln: null
+                  seller:
+                    gln: null
+                  orderLogisticalInformation:
+                    shipFrom:
+                      additionalPartyIdentification:
+                        - additionalPartyIdentificationTypeCode: FOR_INTERNAL_USE_1
+                          additionalPartyIdentificationValue: 48tj3z8p
+                        - additionalPartyIdentificationTypeCode: FOR_INTERNAL_USE_2
+                          additionalPartyIdentificationValue: E0274
+                    shipTo:
+                      additionalPartyIdentification:
+                        - additionalPartyIdentificationTypeCode: FOR_INTERNAL_USE_1
+                          additionalPartyIdentificationValue: vuxn39
+                        - additionalPartyIdentificationTypeCode: FOR_INTERNAL_USE_2
+                          additionalPartyIdentificationValue: '0477'
+                    orderLogisticalDateInformation:
+                      requestedDeliveryDateTime:
+                        date: '2023-06-09'
+                        time: '00:00'
+                    avpList:
+                      - name: udcOrderformat
+                        value: Confirmed
+                      - name: udcIsordermultilocation
+                        value: false
+                      - name: udcOrderid
+                        value: E027404771452309
+                      - name: udcOrderstatus
+                        value: Issued
+                    orderLineItem:
+                      - lineItemNumber: 1
+                        requestedQuantity:
+                          measurementUnitCode: CS
+                          value: 0
+                        lineItemActionCode: ADDITION
+                        transactionalTradeItem:
+                          gtin: '8712100889233'
+                          additionalTradeItemIdentification:
+                            - additionalTradeItemIdentificationTypeCode: FOR_INTERNAL_USE_1
+                              additionalTradeItemIdentificationValue: zknehknh
+                            - additionalTradeItemIdentificationTypeCode: FOR_INTERNAL_USE_2
+                              additionalTradeItemIdentificationValue: '6741156'
+                          tradeItemDescription: Walls Solero Exotic Impulse 90ml
+                        avpList:
+                          - name: udcPacksize
+                            value: 25
+                          - name: udcOrderplacementdate
+                            value: '2023-06-08'
+                          - name: udcOrderplanid
+                            value: '89613'
+                      - lineItemNumber: 2
+                        requestedQuantity:
+                          measurementUnitCode: CS
+                          value: 0
+                        lineItemActionCode: ADDITION
+                        transactionalTradeItem:
+                          gtin: '8712100836275'
+                          additionalTradeItemIdentification:
+                            - additionalTradeItemIdentificationTypeCode: FOR_INTERNAL_USE_1
+                              additionalTradeItemIdentificationValue: 71q3qdp3
+                            - additionalTradeItemIdentificationTypeCode: FOR_INTERNAL_USE_2
+                              additionalTradeItemIdentificationValue: '6741341'
+                          tradeItemDescription: Magnum White Stick 110ml
+                        avpList:
+                          - name: udcPacksize
+                            value: 20
+                          - name: udcOrderplacementdate
+                            value: '2023-06-08'
+                          - name: udcOrderplanid
+                            value: '89613'
+                      - lineItemNumber: 3
+                        requestedQuantity:
+                          measurementUnitCode: CS
+                          value: 0
+                        lineItemActionCode: ADDITION
+                        transactionalTradeItem:
+                          gtin: '8712100888274'
+                          additionalTradeItemIdentification:
+                            - additionalTradeItemIdentificationTypeCode: FOR_INTERNAL_USE_1
+                              additionalTradeItemIdentificationValue: wfgg135b
+                            - additionalTradeItemIdentificationTypeCode: FOR_INTERNAL_USE_2
+                              additionalTradeItemIdentificationValue: '6740463'
+                          tradeItemDescription: Wall's Feast Ice Lolly 90ml
+                        avpList:
+                          - name: udcPacksize
+                            value: 35
+                          - name: udcOrderplacementdate
+                            value: '2023-06-08'
+                          - name: udcOrderplanid
+                            value: '89613'
+                      - lineItemNumber: 4
+                        requestedQuantity:
+                          measurementUnitCode: CS
+                          value: 0
+                        lineItemActionCode: ADDITION
+                        transactionalTradeItem:
+                          gtin: '8712100836169'
+                          additionalTradeItemIdentification:
+                            - additionalTradeItemIdentificationTypeCode: FOR_INTERNAL_USE_1
+                              additionalTradeItemIdentificationValue: 7p34dwc6
+                            - additionalTradeItemIdentificationTypeCode: FOR_INTERNAL_USE_2
+                              additionalTradeItemIdentificationValue: '6741332'
+                          tradeItemDescription: Magnum Classic 110ml
+                        avpList:
+                          - name: udcPacksize
+                            value: 20
+                          - name: udcOrderplacementdate
+                            value: '2023-06-08'
+                          - name: udcOrderplanid
+                            value: '89613'
+                      - lineItemNumber: 5
+                        requestedQuantity:
+                          measurementUnitCode: CS
+                          value: 0
+                        lineItemActionCode: ADDITION
+                        transactionalTradeItem:
+                          gtin: '8000920400487'
+                          additionalTradeItemIdentification:
+                            - additionalTradeItemIdentificationTypeCode: FOR_INTERNAL_USE_1
+                              additionalTradeItemIdentificationValue: 8avaqa70
+                            - additionalTradeItemIdentificationTypeCode: FOR_INTERNAL_USE_2
+                              additionalTradeItemIdentificationValue: '6741168'
+                          tradeItemDescription: Wall's Twister 80ml
+                        avpList:
+                          - name: udcPacksize
+                            value: 35
+                          - name: udcOrderplacementdate
+                            value: '2023-06-08'
+                          - name: udcOrderplanid
+                            value: '89613'
+                      - lineItemNumber: 6
+                        requestedQuantity:
+                          measurementUnitCode: CS
+                          value: 0
+                        lineItemActionCode: ADDITION
+                        transactionalTradeItem:
+                          gtin: '8000920401170'
+                          additionalTradeItemIdentification:
+                            - additionalTradeItemIdentificationTypeCode: FOR_INTERNAL_USE_1
+                              additionalTradeItemIdentificationValue: k2v86h88
+                            - additionalTradeItemIdentificationTypeCode: FOR_INTERNAL_USE_2
+                              additionalTradeItemIdentificationValue: '6741160'
+                          tradeItemDescription: Wall's Calippo Orange 105ml
+                        avpList:
+                          - name: udcPacksize
+                            value: 24
+                          - name: udcOrderplacementdate
+                            value: '2023-06-08'
+                          - name: udcOrderplanid
+                            value: '89613'
+                      - lineItemNumber: 7
+                        requestedQuantity:
+                          measurementUnitCode: CS
+                          value: 0
+                        lineItemActionCode: ADDITION
+                        transactionalTradeItem:
+                          gtin: '17000001705171'
+                          additionalTradeItemIdentification:
+                            - additionalTradeItemIdentificationTypeCode: FOR_INTERNAL_USE_1
+                              additionalTradeItemIdentificationValue: teysde41
+                            - additionalTradeItemIdentificationTypeCode: FOR_INTERNAL_USE_2
+                              additionalTradeItemIdentificationValue: '6741356'
+                          tradeItemDescription: Cadbury Flake 99 125ml
+                        avpList:
+                          - name: udcPacksize
+                            value: 24
+                          - name: udcOrderplacementdate
+                            value: '2023-06-08'
+                          - name: udcOrderplanid
+                            value: '89613'
+                      - lineItemNumber: 8
+                        requestedQuantity:
+                          measurementUnitCode: CS
+                          value: 0
+                        lineItemActionCode: ADDITION
+                        transactionalTradeItem:
+                          gtin: '5000159460866'
+                          additionalTradeItemIdentification:
+                            - additionalTradeItemIdentificationTypeCode: FOR_INTERNAL_USE_1
+                              additionalTradeItemIdentificationValue: rz9zvr0d
+                            - additionalTradeItemIdentificationTypeCode: FOR_INTERNAL_USE_2
+                              additionalTradeItemIdentificationValue: '7624562'
+                          tradeItemDescription: Mars Ice Cream Singles 74ml
+                        avpList:
+                          - name: udcPacksize
+                            value: 24
+                          - name: udcOrderplacementdate
+                            value: '2023-06-08'
+                          - name: udcOrderplanid
+                            value: '89613'
+    description: >-
+      The topic contains purchase orders which are published by
+      po-execution-service
+    summary: >-
+      Purchaser Orders will be published as per the GS1 model. This message will
+      contain the purchase order for a given supplier, location and delivery
+      date.
+operations:
+  publishPurchaseOrderEvent:
+    action: send
+    description: Publication of START and END events
+    channel:
+      $ref: '#/channels/sainsburys.data.sc-pom.purchase-order-event.v0'
+    summary: >-
+      START and END events are expected to be published for each supplier. This
+      event will contain the list of Purchase Order Numbers being sent to TC for
+      that supplier.
+    messages:
+      - $ref: >-
+          #/channels/sainsburys.data.sc-pom.purchase-order-event.v0/messages/publishPurchaseOrderEvent.message
+  publishPurchaseOrder:
+    action: send
+    description: Publication of Purchase Orders in GS1 format
+    channel:
+      $ref: '#/channels/sainsburys.data.sc-pom.purchase-order.v0'
+    summary: >-
+      Purchaser Orders will be published as per the GS1 model. This message will
+      contain the purchase order for a given supplier, location and delivery
+      date.
+    messages:
+      - $ref: >-
+          #/channels/sainsburys.data.sc-pom.purchase-order.v0/messages/publishPurchaseOrder.message
+components:
+  messages:
+    purchaseOrderEvent:
+      name: purchaseOrderEvent
+      title: Purchase order event
+      summary: >-
+        Sends the start and end event for each Purchase Order Batch(Grouping is
+        done based on supplier) sent to True commerce. The event will also
+        contain the list of Purchase Order Numbers sent to True Commerce.
+      contentType: application/avro
+      payload:
+        payload:
+  schemaFormat: application/vnd.apache.avro;version=1.9.0
+  schema:
+    $ref: 'https://raw.githubusercontent.com/OAI/OpenAPI-Specification/main/examples/v3.0/petstore.yaml'
+        
+          namespace: uk.co.sainsburys.supplychain.pom.avro.purchaseorderevent
+          type: record
+          name: PurchaseOrderEventSchema
+          doc: Schema for Purchase Order Event notification to the EDI coordinator
+          fields:
+            - name: udcBatchCorrelationID
+              type: string
+              doc: >-
+                Batch correlation Id (BCID). This field will help True Commerce
+                to group the orders into a single TRADACOM EDI file
+            - name: legacySupplierId
+              type:
+                - 'null'
+                - string
+              default: null
+              doc: Supplier/SupplierSite Id in legacy/finance format.
+            - name: eventStartOrEnd
+              type: string
+              doc: >-
+                This attribute will notify about the start or the end event.
+                Valid Values – Start , End
+            - name: numberOfMessagesInBatch
+              type:
+                - 'null'
+                - int
+              default: null
+              doc: >-
+                This attribute will give total number of orders under batch
+                correlationId
+            - name: creationTimeUTC
+              type:
+                type: long
+                logicalType: timestamp-millis
+              doc: Time when this event was published by producer
+            - name: orderNumbers
+              type:
+                - 'null'
+                - type: array
+                  items: string
+              default: null
+              doc: List of order numbers associated with this batch correlationID
+      headers:
+        type: object
+        properties:
+          messageKey:
+            type: string
+            description: >-
+              This field will be used to uniquely identify the message. It is
+              derived by joining supplierId with message creation time
+      examples:
+        - name: A sample purchase order start event
+          summary: >-
+            Please refer the below sample to get an idea of how start event will
+            look like
+          headers:
+            messageKey: 48tj3z8p-20230608012943921801623
+          payload:
+            udcBatchCorrelationID: 48tj3z8p-20230608012943921801623
+            legacySupplierId: E0274
+            eventStartOrEnd: START
+            numberOfMessagesInBatch: 4
+            creationTimeUTC: '2023-06-08T01:29:43.921Z'
+            orderNumbers:
+              - E02741080145
+              - E02740199145
+              - E02740478145
+              - E02741644145
+        - name: A sample purchase order end event
+          summary: >-
+            Please refer the below sample to get an idea of how end event will
+            look like
+          headers:
+            messageKey: 48tj3z8p-20230608012943921801623
+          payload:
+            udcBatchCorrelationID: 48tj3z8p-20230608012943921801623
+            legacySupplierId: E0274
+            eventStartOrEnd: END
+            numberOfMessagesInBatch: 4
+            creationTimeUTC: '2023-06-08T01:29:43.921Z'
+            orderNumbers:
+              - E02741080145
+              - E02740199145
+              - E02740478145
+              - E02741644145
+    purchaseOrder:
+      name: purchaseOrder
+      title: Purchase Order
+      summary: Sends the purchase order to True Commerce.
+      contentType: application/avro
+      payload:
+        schemaFormat: application/vnd.apache.avro;version=1.9.0
+        schema:
+          namespace: uk.co.sainsburys.supplychain.pom.avro.purchaseorder
+          type: record
+          name: PurchaseOrderSchema
+          doc: >-
+            Schema for Purchase Orders Message published by POM team in GS1
+            format
+          fields:
+            - name: udcBatchCorrelationID
+              type: string
+              doc: >-
+                Batch correlation Id (BCID). This field will help True Commerce
+                to group the orders into a single TRADACOM EDI file
+            - name: standardBusinessDocumentHeader
+              doc: >-
+                Standard Business Document Header (SBDH) is a header that can be
+                used to wrap any business document, regardless of the syntax of
+                the business document
+              type:
+                name: StandardBusinessDocumentHeaderSchema
+                type: record
+                fields:
+                  - name: headerVersion
+                    type: string
+                    default: '1.0'
+                    doc: The version number of the SBDH standard used
+                  - name: sender
+                    doc: >-
+                      The sender of the message, party representing the
+                      organization that created the standard business document
+                    type:
+                      type: array
+                      items:
+                        name: SenderSchema
+                        type: record
+                        fields:
+                          - name: identifier
+                            type: string
+                            default: J.SAINSBURY PLC
+                            doc: >-
+                              The sender of the message, party representing the
+                              organization that created the standard business
+                              document
+                          - name: contactInformation
+                            doc: The contact information for the sender
+                            type:
+                              name: SenderContactInformationSchema
+                              type: record
+                              fields:
+                                - name: contactTypeIdentifier
+                                  type: string
+                                  default: Purchase Order Management
+                                  doc: Role of the identifier
+                  - name: receiver
+                    doc: >-
+                      The receiver of the message, the party representing the
+                      organization that receives the standard business document
+                    type:
+                      type: array
+                      items:
+                        name: ReceiverSchema
+                        type: record
+                        fields:
+                          - name: identifier
+                            type: string
+                            doc: >-
+                              The receiver of the message, the party
+                              representing the organization that receives the
+                              standard business document
+                          - name: contactInformation
+                            doc: Contact information for the receiver
+                            type:
+                              name: ReceiverContactInformationSchema
+                              type: record
+                              fields:
+                                - name: contactTypeIdentifier
+                                  type: string
+                                  doc: Role of the identifier.
+                  - name: documentIdentification
+                    doc: >-
+                      The document identification contains reference information
+                      that uniquely identifies this instance of the Standard
+                      Business Document (SBD) between the ‘Sender’ and the
+                      ‘Receiver’.
+                    type:
+                      name: DocumentIdentificationSchema
+                      type: record
+                      fields:
+                        - name: standard
+                          type: string
+                          default: GS1
+                          doc: >-
+                            The name of the document standard contained in the
+                            payload
+                        - name: typeVersion
+                          type: string
+                          default: '3.5'
+                          doc: >-
+                            The version number of the root schema of the XML
+                            business document is contained in the payload of the
+                            message
+                        - name: instanceIdentifier
+                          type: string
+                          default: GUID
+                          doc: >-
+                            The description contains reference information that
+                            uniquely identifies this instance of the Standard
+                            Business Document (SBD) between the ‘Sender’ and the
+                            ‘Receiver’
+                        - name: type
+                          type: string
+                          default: PurchaseOrder
+                          doc: This element identifies the type of document.
+                        - name: multipleType
+                          type: boolean
+                          default: false
+                          doc: >-
+                            Flag to indicate that there is more than one type of
+                            business document in the payload of the SBDH.
+                        - name: creationDateTime
+                          type:
+                            type: long
+                            logicalType: timestamp-millis
+                          doc: >-
+                            Date and time of the SBDH document creation. This
+                            stores the number of milliseconds from the unix
+                            epoch, 1 January 1970 00:00:00.000 UTC
+            - name: order
+              doc: An array of purchase orders
+              type:
+                type: array
+                items:
+                  name: OrderSchema
+                  type: record
+                  fields:
+                    - name: creationDateTime
+                      type:
+                        type: long
+                        logicalType: timestamp-millis
+                      doc: >-
+                        Date and time when the purchase order was created. This
+                        stores the number of milliseconds from the unix epoch, 1
+                        January 1970 00:00:00.000 UTC
+                    - name: documentStatusCode
+                      type: string
+                      default: ORIGINAL
+                      doc: >-
+                        Indicates if the document is a copy or an original.
+                        Valid Values : ADDITIONAL_TRANSMISSION, COPY and
+                        ORIGINAL.
+                    - name: documentActionCode
+                      type: string
+                      doc: >-
+                        Code specifying the action to be taken in the system of
+                        the recipient using the information in the document.
+                        Valid Values : ADD, CHANGE_BY_REFRESH and DELETE
+                    - name: documentStructureVersion
+                      type: string
+                      default: '3.5'
+                      doc: >-
+                        Specification of the version of the standard on which
+                        the structure of the document is based
+                    - name: lastUpdateDateTime
+                      type:
+                        type: long
+                        logicalType: timestamp-millis
+                      doc: >-
+                        Date and time when the purchase order was last updated.
+                        This stores the number of milliseconds from the unix
+                        epoch, 1 January 1970 00:00:00.000 UTC
+                    - name: revisionNumber
+                      type: int
+                      doc: >-
+                        Number to be used for identification and referencing of
+                        subsequent updates to a business document
+                    - name: documentEffectiveDate
+                      doc: >-
+                        The date and time that the document becomes effective
+                        from the commercial or legal point of view
+                      type:
+                        name: DocumentEffectiveDateSchema
+                        type: record
+                        fields:
+                          - name: date
+                            type:
+                              type: int
+                              logicalType: date
+                            doc: >-
+                              The date that the document becomes effective from
+                              the commercial or legal point of view. This stores
+                              the number of days from the unix epoch, 1 January
+                              1970
+                          - name: time
+                            type:
+                              type: int
+                              logicalType: time-millis
+                            doc: >-
+                              The time that the document becomes effective from
+                              the commercial or legal point of view. This stores
+                              the number of milliseconds after midnight,
+                              00:00:00.000
+                    - name: orderIdentification
+                      doc: >-
+                        A unique identification of the Order. This is the
+                        document number/id which will be communicated to the
+                        supplier
+                      type:
+                        name: OrderIdentificationSchema
+                        type: record
+                        fields:
+                          - name: entityIdentifier
+                            type: string
+                            doc: >-
+                              The unique identification of the Order. This is
+                              the document number/id which will be communicated
+                              to the supplier
+                    - name: orderTypeCode
+                      type: string
+                      default: '220'
+                      doc: >-
+                        Identifies the kind of purchase order, enabling the
+                        recipient of the order to determine the appropriate
+                        processing
+                    - name: buyer
+                      doc: The party to which products or services are sold
+                      type:
+                        name: BuyerSchema
+                        type: record
+                        fields:
+                          - name: gln
+                            type:
+                              - 'null'
+                              - string
+                            default: null
+                            doc: >-
+                              Identifies the party to which products or services
+                              are sold
+                    - name: seller
+                      doc: The party which sells products or services to a buyer
+                      type:
+                        name: SellerSchema
+                        type: record
+                        fields:
+                          - name: gln
+                            type:
+                              - 'null'
+                              - string
+                            default: null
+                            doc: >-
+                              Identifies the party which sells products or
+                              services to a buyer
+                    - name: orderLogisticalInformation
+                      doc: Logistical information for the order
+                      type:
+                        name: OrderLogisticalInformationSchema
+                        type: record
+                        fields:
+                          - name: shipFrom
+                            doc: The location from which goods will be shipped
+                            type:
+                              name: ShipFromSchema
+                              type: record
+                              fields:
+                                - name: additionalPartyIdentification
+                                  type:
+                                    type: array
+                                    items:
+                                      - name: >-
+                                          ShipFromAdditionalPartyIdentificationSchema
+                                        type: record
+                                        fields:
+                                          - name: additionalPartyIdentificationTypeCode
+                                            type: string
+                                            doc: >-
+                                              Type code to segregate different ship
+                                              locations. Valid Values :
+                                              FOR_INTERNAL_USE_1 and
+                                              FOR_INTERNAL_USE_2
+                                          - name: additionalPartyIdentificationValue
+                                            type: string
+                                            doc: >-
+                                              Identifies the source location from
+                                              which goods will be shipped. Valid
+                                              values are Strategic-SUPPLIER_ID and
+                                              Legacy/Finance-SUPPLIER_ID respectively
+                                              for FOR_INTERNAL_USE_1 and
+                                              FOR_INTERNAL_USE_2
+                                  doc: >-
+                                    An array containing values for strategic and
+                                    legacy supplierId
+                          - name: shipTo
+                            doc: The location to which goods will be shipped
+                            type:
+                              name: ShipToSchema
+                              type: record
+                              fields:
+                                - name: additionalPartyIdentification
+                                  type:
+                                    type: array
+                                    items:
+                                      - name: >-
+                                          ShipToAdditionalPartyIdentificationSchema
+                                        type: record
+                                        fields:
+                                          - name: additionalPartyIdentificationTypeCode
+                                            type: string
+                                            doc: >-
+                                              Type code to segregate different ship
+                                              locations. Valid Values :
+                                              FOR_INTERNAL_USE_1 and
+                                              FOR_INTERNAL_USE_2
+                                          - name: additionalPartyIdentificationValue
+                                            type: string
+                                            doc: >-
+                                              Identifies the destination location to
+                                              which goods will be shipped. Valid
+                                              values are Strategic-STORE_ID and
+                                              Legacy/RMS-STORE_ID respectively for
+                                              FOR_INTERNAL_USE_1 and
+                                              FOR_INTERNAL_USE_2
+                                  doc: >-
+                                    An array containing values for strategic and
+                                    legacy locationId
+                          - name: orderLogisticalDateInformation
+                            doc: >-
+                              The date and time on which the goods are requested
+                              to be delivered
+                            type:
+                              name: OrderLogisticalDateInformationSchema
+                              type: record
+                              fields:
+                                - name: requestedDeliveryDateTime
+                                  doc: >-
+                                    The date and time on which the goods are
+                                    requested to be delivered
+                                  type:
+                                    name: RequestedDeliveryDateTimeSchema
+                                    type: record
+                                    fields:
+                                      - name: date
+                                        type:
+                                          type: int
+                                          logicalType: date
+                                        doc: >-
+                                          Provides the date and optional time on
+                                          which the goods are requested to be
+                                          delivered. This stores the number of
+                                          days from the unix epoch, 1 January 1970
+                                      - name: time
+                                        type:
+                                          type: int
+                                          logicalType: time-millis
+                                        doc: >-
+                                          Provides the time on which the goods are
+                                          requested to be delivered.  This stores
+                                          the number of milliseconds after
+                                          midnight, 00:00:00.000
+                          - name: avpList
+                            type:
+                              type: array
+                              items:
+                                - name: OrderAvpListSchema
+                                  type: record
+                                  fields:
+                                    - name: name
+                                      doc: Name of the attribute
+                                      type: string
+                                    - name: value
+                                      doc: Value of the attribute
+                                      type:
+                                        - string
+                                        - boolean
+                            doc: >-
+                              An array containing the name-value pair for
+                              udcOrderFormat(Value Type-string),
+                              udcIsOrderMultiLocation(Value Type-boolean),
+                              udcOrderId(Value Type-string),
+                              udcOrderstatus(Value Type-string)
+                          - name: orderLineItem
+                            doc: An array of line items associated with the order
+                            type:
+                              type: array
+                              items:
+                                - name: OrderLineItemSchema
+                                  type: record
+                                  fields:
+                                    - name: lineItemNumber
+                                      type: long
+                                      doc: >-
+                                        Provides the line number associated with
+                                        the Order Line Item
+                                    - name: requestedQuantity
+                                      doc: >-
+                                        The quantity which has been requested in
+                                        the order
+                                      type:
+                                        name: RequestedQuantitySchema
+                                        type: record
+                                        fields:
+                                          - name: measurementUnitCode
+                                            type: string
+                                            doc: >-
+                                              Unique identifier of the unit in which
+                                              the product is measured in orders
+                                          - name: value
+                                            type: double
+                                            doc: >-
+                                              The quantity which has been requested in
+                                              the order
+                                    - name: lineItemActionCode
+                                      type: string
+                                      doc: >-
+                                        Provides the activity required by the
+                                        recipient on the line item of this
+                                        order. Valid Values :
+                                        ADDITION,CHANGED,DELETED,NOT_ACCEPTED,NOT_AMENDED
+                                        and PENDING
+                                    - name: transactionalTradeItem
+                                      doc: >-
+                                        The trade item (product or service)
+                                        which is the subject of the order line
+                                        item
+                                      type:
+                                        name: TransactionalTradeItemSchema
+                                        type: record
+                                        fields:
+                                          - name: gtin
+                                            type:
+                                              - 'null'
+                                              - string
+                                            doc: >-
+                                              The GS1 Identification Key used to
+                                              identify trade items
+                                            default: null
+                                          - name: additionalTradeItemIdentification
+                                            type:
+                                              type: array
+                                              items:
+                                                - name: AdditionalTradeItemIdentificationSchema
+                                                  type: record
+                                                  fields:
+                                                    - name: >-
+                                                        additionalTradeItemIdentificationTypeCode
+                                                      type: string
+                                                      doc: >-
+                                                        The label is used to add the traded item
+                                                        equivalent code used by the buying
+                                                        organization. Valid Values :
+                                                        FOR_INTERNAL_USE_1 and
+                                                        FOR_INTERNAL_USE_2
+                                                    - name: additionalTradeItemIdentificationValue
+                                                      type: string
+                                                      doc: >-
+                                                        Traded item equivalent code which
+                                                        represents the item. Valid values are
+                                                        SAIN_ID and RMS SKU_ID respectively for
+                                                        FOR_INTERNAL_USE_1 and
+                                                        FOR_INTERNAL_USE_2
+                                            doc: >-
+                                              An array containing values for strategic
+                                              and legacy productId
+                                          - name: tradeItemDescription
+                                            type: string
+                                            doc: >-
+                                              Textual description/name of the trade
+                                              item
+                                    - name: avpList
+                                      type:
+                                        type: array
+                                        items:
+                                          - name: OrderLineItemAvpListSchema
+                                            type: record
+                                            fields:
+                                              - name: name
+                                                doc: Name of the attribute
+                                                type: string
+                                              - name: value
+                                                doc: Value of the attribute
+                                                type:
+                                                  - type: int
+                                                    logicalType: date
+                                                  - double
+                                                  - string
+                                      doc: >-
+                                        An array containing name-value pair for
+                                        udcPacksize(value
+                                        Type-double),udcOrderplacementdate(value
+                                        Type-integer) ( This stores the number
+                                        of days from the unix epoch, 1 January
+                                        1970),udcOrderplanid(value Type-string)
+      headers:
+        type: object
+        properties:
+          messageKey:
+            type: string
+            description: >-
+              This field will have the same value for all purchase orders in a
+              given batch. The value will match the message key of purchase
+              order event.
+      examples:
+        - name: A sample purchase order message
+          summary: >-
+            Please refer the below sample to get an idea of how purchase order
+            will look like
+          headers:
+            messageKey: 48tj3z8p-20230608012943921801623
+          payload:
+            udcBatchCorrelationID: 48tj3z8p-20230608012943921801623
+            standardBusinessDocumentHeader:
+              headerVersion: '1.0'
+              sender:
+                - identifier: J.SAINSBURY PLC
+                  contactInformation:
+                    contactTypeIdentifier: Purchase Order Management
+              receiver:
+                - identifier: TRUECOMMERCE
+                  contactInformation:
+                    contactTypeIdentifier: EDI co-ordinator
+                - identifier: J.SAINSBURY PLC
+                  contactInformation:
+                    contactTypeIdentifier: Purchase Order Management consumers
+              documentIdentification:
+                standard: GS1
+                typeVersion: '3.5'
+                instanceIdentifier: 48tj3z8p-20230608012943921801623
+                type: PurchaseOrder
+                multipleType: false
+                creationDateTime: '2023-06-08T01:29:43.921Z'
+            order:
+              - creationDateTime: '2023-06-08T01:29:08.468Z'
+                documentStatusCode: ORIGINAL
+                documentActionCode: ADD
+                documentStructureVersion: '3.5'
+                lastUpdateDateTime: '2023-06-08T01:29:08.468Z'
+                revisionNumber: 0
+                documentEffectiveDate:
+                  date: '2023-06-08'
+                  time: '01:29:08.468'
+                orderIdentification:
+                  entityIdentifier: E02740477145
+                orderTypeCode: '220'
+                buyer:
+                  gln: null
+                seller:
+                  gln: null
+                orderLogisticalInformation:
+                  shipFrom:
+                    additionalPartyIdentification:
+                      - additionalPartyIdentificationTypeCode: FOR_INTERNAL_USE_1
+                        additionalPartyIdentificationValue: 48tj3z8p
+                      - additionalPartyIdentificationTypeCode: FOR_INTERNAL_USE_2
+                        additionalPartyIdentificationValue: E0274
+                  shipTo:
+                    additionalPartyIdentification:
+                      - additionalPartyIdentificationTypeCode: FOR_INTERNAL_USE_1
+                        additionalPartyIdentificationValue: vuxn39
+                      - additionalPartyIdentificationTypeCode: FOR_INTERNAL_USE_2
+                        additionalPartyIdentificationValue: '0477'
+                  orderLogisticalDateInformation:
+                    requestedDeliveryDateTime:
+                      date: '2023-06-09'
+                      time: '00:00'
+                  avpList:
+                    - name: udcOrderformat
+                      value: Confirmed
+                    - name: udcIsordermultilocation
+                      value: false
+                    - name: udcOrderid
+                      value: E027404771452309
+                    - name: udcOrderstatus
+                      value: Issued
+                  orderLineItem:
+                    - lineItemNumber: 1
+                      requestedQuantity:
+                        measurementUnitCode: CS
+                        value: 0
+                      lineItemActionCode: ADDITION
+                      transactionalTradeItem:
+                        gtin: '8712100889233'
+                        additionalTradeItemIdentification:
+                          - additionalTradeItemIdentificationTypeCode: FOR_INTERNAL_USE_1
+                            additionalTradeItemIdentificationValue: zknehknh
+                          - additionalTradeItemIdentificationTypeCode: FOR_INTERNAL_USE_2
+                            additionalTradeItemIdentificationValue: '6741156'
+                        tradeItemDescription: Walls Solero Exotic Impulse 90ml
+                      avpList:
+                        - name: udcPacksize
+                          value: 25
+                        - name: udcOrderplacementdate
+                          value: '2023-06-08'
+                        - name: udcOrderplanid
+                          value: '89613'
+                    - lineItemNumber: 2
+                      requestedQuantity:
+                        measurementUnitCode: CS
+                        value: 0
+                      lineItemActionCode: ADDITION
+                      transactionalTradeItem:
+                        gtin: '8712100836275'
+                        additionalTradeItemIdentification:
+                          - additionalTradeItemIdentificationTypeCode: FOR_INTERNAL_USE_1
+                            additionalTradeItemIdentificationValue: 71q3qdp3
+                          - additionalTradeItemIdentificationTypeCode: FOR_INTERNAL_USE_2
+                            additionalTradeItemIdentificationValue: '6741341'
+                        tradeItemDescription: Magnum White Stick 110ml
+                      avpList:
+                        - name: udcPacksize
+                          value: 20
+                        - name: udcOrderplacementdate
+                          value: '2023-06-08'
+                        - name: udcOrderplanid
+                          value: '89613'
+                    - lineItemNumber: 3
+                      requestedQuantity:
+                        measurementUnitCode: CS
+                        value: 0
+                      lineItemActionCode: ADDITION
+                      transactionalTradeItem:
+                        gtin: '8712100888274'
+                        additionalTradeItemIdentification:
+                          - additionalTradeItemIdentificationTypeCode: FOR_INTERNAL_USE_1
+                            additionalTradeItemIdentificationValue: wfgg135b
+                          - additionalTradeItemIdentificationTypeCode: FOR_INTERNAL_USE_2
+                            additionalTradeItemIdentificationValue: '6740463'
+                        tradeItemDescription: Wall's Feast Ice Lolly 90ml
+                      avpList:
+                        - name: udcPacksize
+                          value: 35
+                        - name: udcOrderplacementdate
+                          value: '2023-06-08'
+                        - name: udcOrderplanid
+                          value: '89613'
+                    - lineItemNumber: 4
+                      requestedQuantity:
+                        measurementUnitCode: CS
+                        value: 0
+                      lineItemActionCode: ADDITION
+                      transactionalTradeItem:
+                        gtin: '8712100836169'
+                        additionalTradeItemIdentification:
+                          - additionalTradeItemIdentificationTypeCode: FOR_INTERNAL_USE_1
+                            additionalTradeItemIdentificationValue: 7p34dwc6
+                          - additionalTradeItemIdentificationTypeCode: FOR_INTERNAL_USE_2
+                            additionalTradeItemIdentificationValue: '6741332'
+                        tradeItemDescription: Magnum Classic 110ml
+                      avpList:
+                        - name: udcPacksize
+                          value: 20
+                        - name: udcOrderplacementdate
+                          value: '2023-06-08'
+                        - name: udcOrderplanid
+                          value: '89613'
+                    - lineItemNumber: 5
+                      requestedQuantity:
+                        measurementUnitCode: CS
+                        value: 0
+                      lineItemActionCode: ADDITION
+                      transactionalTradeItem:
+                        gtin: '8000920400487'
+                        additionalTradeItemIdentification:
+                          - additionalTradeItemIdentificationTypeCode: FOR_INTERNAL_USE_1
+                            additionalTradeItemIdentificationValue: 8avaqa70
+                          - additionalTradeItemIdentificationTypeCode: FOR_INTERNAL_USE_2
+                            additionalTradeItemIdentificationValue: '6741168'
+                        tradeItemDescription: Wall's Twister 80ml
+                      avpList:
+                        - name: udcPacksize
+                          value: 35
+                        - name: udcOrderplacementdate
+                          value: '2023-06-08'
+                        - name: udcOrderplanid
+                          value: '89613'
+                    - lineItemNumber: 6
+                      requestedQuantity:
+                        measurementUnitCode: CS
+                        value: 0
+                      lineItemActionCode: ADDITION
+                      transactionalTradeItem:
+                        gtin: '8000920401170'
+                        additionalTradeItemIdentification:
+                          - additionalTradeItemIdentificationTypeCode: FOR_INTERNAL_USE_1
+                            additionalTradeItemIdentificationValue: k2v86h88
+                          - additionalTradeItemIdentificationTypeCode: FOR_INTERNAL_USE_2
+                            additionalTradeItemIdentificationValue: '6741160'
+                        tradeItemDescription: Wall's Calippo Orange 105ml
+                      avpList:
+                        - name: udcPacksize
+                          value: 24
+                        - name: udcOrderplacementdate
+                          value: '2023-06-08'
+                        - name: udcOrderplanid
+                          value: '89613'
+                    - lineItemNumber: 7
+                      requestedQuantity:
+                        measurementUnitCode: CS
+                        value: 0
+                      lineItemActionCode: ADDITION
+                      transactionalTradeItem:
+                        gtin: '17000001705171'
+                        additionalTradeItemIdentification:
+                          - additionalTradeItemIdentificationTypeCode: FOR_INTERNAL_USE_1
+                            additionalTradeItemIdentificationValue: teysde41
+                          - additionalTradeItemIdentificationTypeCode: FOR_INTERNAL_USE_2
+                            additionalTradeItemIdentificationValue: '6741356'
+                        tradeItemDescription: Cadbury Flake 99 125ml
+                      avpList:
+                        - name: udcPacksize
+                          value: 24
+                        - name: udcOrderplacementdate
+                          value: '2023-06-08'
+                        - name: udcOrderplanid
+                          value: '89613'
+                    - lineItemNumber: 8
+                      requestedQuantity:
+                        measurementUnitCode: CS
+                        value: 0
+                      lineItemActionCode: ADDITION
+                      transactionalTradeItem:
+                        gtin: '5000159460866'
+                        additionalTradeItemIdentification:
+                          - additionalTradeItemIdentificationTypeCode: FOR_INTERNAL_USE_1
+                            additionalTradeItemIdentificationValue: rz9zvr0d
+                          - additionalTradeItemIdentificationTypeCode: FOR_INTERNAL_USE_2
+                            additionalTradeItemIdentificationValue: '7624562'
+                        tradeItemDescription: Mars Ice Cream Singles 74ml
+                      avpList:
+                        - name: udcPacksize
+                          value: 24
+                        - name: udcOrderplacementdate
+                          value: '2023-06-08'
+                        - name: udcOrderplanid
+                          value: '89613'
+  securitySchemes:
+    saslScram:
+      type: scramSha256
+      description: Provide your username and password for SASL/SCRAM authentication
